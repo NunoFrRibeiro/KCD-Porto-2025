@@ -1,0 +1,23 @@
+{
+  "name": "kcd",
+  "engineVersion": "v0.18.18",
+  "sdk": {
+    "source": "go"
+  },
+  "dependencies": [
+    {
+      "name": "build",
+      "source": ".dagger/build-kcd"
+    },
+    {
+      "name": "github-issue",
+      "source": "github.com/kpenfound/dag/github-issue@github-issue/v2.0.0",
+      "pin": "46246adc2083c59db0076730e86b6fda2db8261a"
+    },
+    {
+      "name": "workspace",
+      "source": ".dagger/workspace"
+    }
+  ],
+  "source": ".dagger"
+}
