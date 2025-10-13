@@ -6,12 +6,6 @@ import (
 	"fmt"
 )
 
-var (
-	GH_REPO       = "https://github.com/NunoFrRibeiro/KCD-Porto-2025"
-	COUNTER_IMAGE = "nunofilribeiro/counterbackend:v0.1.0"
-	ADDER_IMAGE   = "nunofilribeiro/adderbackend:v0.1.0"
-)
-
 // Runs GolangCILint for all sources
 func (m *Kcd) Lint(
 	ctx context.Context,
@@ -48,6 +42,26 @@ func (m *Kcd) Test(
 	return result, nil
 }
 
+// Run Trivy container scan
+func (m *Kcd) RunTrivy(
+	ctx context.Context,
+) (string, error) {
+	adderContainer := m.Build.Container(m.Source.Directory("AdderBackend"), 8080, "AdderBackend")
+	adderResult, err := m.Build.RunTrivy(ctx, adderContainer)
+	if err != nil {
+		return "", nil
+	}
+
+	counterContainer := m.Build.Container(m.Source.Directory("CounterBackend"), 8081, "CounterBackend")
+	counterResult, err := m.Build.RunTrivy(ctx, counterContainer)
+	if err != nil {
+		return "", nil
+	}
+
+	result := adderResult + "\n" + counterResult
+	return result, nil
+}
+
 // Run ci-check
 func (m *Kcd) Check(
 	ctx context.Context,
@@ -78,5 +92,14 @@ func (m *Kcd) Check(
 		return "", err
 	}
 
-	return fmt.Sprintf("lint result: %s\ntest result: %s\n", lintResult, testResult), nil
+	trivyResult, err := m.RunTrivy(ctx)
+	if err != nil {
+		if githubToken != nil {
+			debugPr := m.DebugPR(ctx, githubToken, commit, model)
+			return "", fmt.Errorf("failed to run trivy scan.\nrunning debugger for %v %v", err, debugPr)
+		}
+		return "", err
+	}
+
+	return fmt.Sprintf("lint result:\n%s\ntest result:\n%s\ntrivy scan result:\n%s\n", lintResult, testResult, trivyResult), nil
 }

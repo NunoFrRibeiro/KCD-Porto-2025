@@ -44,6 +44,14 @@ func (m *Build) Lint(
 		GolangciLint(ctx)
 }
 
+func (m *Build) RunTrivy(
+	ctx context.Context,
+	container *dagger.Container,
+) (string, error) {
+	scan := dag.Trivy().Container(container)
+	return scan.Output(ctx)
+}
+
 // Formatter
 func (m *Build) Format() *dagger.Directory {
 	return dag.Golang().
@@ -74,7 +82,7 @@ func (m *Build) Check(
 	if err != nil {
 		return "", fmt.Errorf("error is: %v", err)
 	}
-	return "Lint result: " + lint + "\n" + "Test result: " + test + "\n" + "Scan result: " + trivyOutuput, nil
+	return "Lint result:\n" + lint + "\n" + "Test result:\n" + test + "\n" + "Scan result:\n" + trivyOutuput, nil
 }
 
 // Builds the source binary

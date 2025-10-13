@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+var GH_REPO = "https://github.com/NunoFrRibeiro/devops-porto-nov"
+
 // Debug locallly
 func (d *Kcd) DebugLocal(
 	ctx context.Context,
