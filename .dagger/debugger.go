@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
+	"dagger/kcd/internal/dagger"
 	"fmt"
 	"path/filepath"
 	"strings"
-
-	"dagger/kcd/internal/dagger"
 )
 
 // Debug locallly

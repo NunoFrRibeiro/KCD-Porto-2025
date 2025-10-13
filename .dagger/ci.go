@@ -2,9 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
-
 	"dagger/kcd/internal/dagger"
+	"fmt"
 )
 
 var (
@@ -81,64 +80,3 @@ func (m *Kcd) Check(
 
 	return fmt.Sprintf("lint result: %s\ntest result: %s\n", lintResult, testResult), nil
 }
-
-// TODO: Possible to show or not
-//
-// // Deploys the docker images to a registry
-// func (m *Kcd) Deploy(
-// 	ctx context.Context,
-// 	// Infisical Auth Client ID
-// 	// +required
-// 	infisicalId *dagger.Secret,
-// 	// Infisical Auth Client Secret
-// 	// +required
-// 	infisicalSecret *dagger.Secret,
-// 	// Infisical Project to fetch secrets
-// 	// +required
-// 	infisicalProject string,
-// ) (string, error) {
-// 	var result string
-// 	if infisicalId != nil && infisicalProject != "" {
-// 		registryUser, err := dag.Infisical(infisicalId, infisicalSecret).
-// 			GetSecret("DH_USER", infisicalProject, "dev", dagger.InfisicalGetSecretOpts{
-// 				SecretPath: "/",
-// 			}).
-// 			Plaintext(ctx)
-// 		if err != nil {
-// 			return "", err
-// 		}
-//
-// 		registryPass := dag.Infisical(infisicalId, infisicalSecret).
-// 			GetSecret("DH_PASS", infisicalProject, "dev", dagger.InfisicalGetSecretOpts{
-// 				SecretPath: "/",
-// 			})
-//
-// 		counterImage := m.Build.Container(
-// 			m.Source.Directory("CounterBackend"),
-// 			8081,
-// 			"CounterBackend",
-// 		)
-// 		counterResult, err := dag.Container().
-// 			WithRegistryAuth(DH_REPO, registryUser, registryPass).
-// 			Publish(ctx, COUNTER_IMAGE, dagger.ContainerPublishOpts{
-// 				PlatformVariants: []*dagger.Container{
-// 					counterImage,
-// 				},
-// 			})
-//
-// 		adderImage := m.Build.Container(m.Source.Directory("AdderBackend"), 8080, "AdderBackend")
-// 		adderResult, err := dag.Container().
-// 			WithRegistryAuth(DH_REPO, registryUser, registryPass).
-// 			Publish(ctx, ADDER_IMAGE, dagger.ContainerPublishOpts{
-// 				PlatformVariants: []*dagger.Container{
-// 					adderImage,
-// 				},
-// 			})
-//
-// 		result = counterResult + "\n" + adderResult
-//
-// 		return result, nil
-// 	}
-//
-// 	return result, nil
-// }

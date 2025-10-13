@@ -1,0 +1,38 @@
+name: check
+
+on:
+  push:
+    branches: ["**", "!main"]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  DAGGER_VERSION: 0.19.2
+  GEMINI_API_KEY: ${{ secrets.LLM_API_KEY }}
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup agent token
+        uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run check
+        uses: dagger/dagger-for-github@8.0.0
+        with:
+          verb: call
+          args: --ref ${{ github.ref }} check --github-token GH_TOKEN --commit ${{ github.sha }} --model gemini-2.0-flash
+          cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+          version: ${{ env.DAGGER_VERSION }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}

@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
-	"fmt"
-
 	"dagger/build/internal/dagger"
+	"fmt"
 )
 
 type Build struct {
 	Source *dagger.Directory
+	// +private
+	Trivy *dagger.Trivy
 }
 
 func New(
@@ -16,6 +17,10 @@ func New(
 ) *Build {
 	return &Build{
 		Source: source,
+		Trivy: dag.Trivy(dagger.TrivyOpts{
+			Cache:             dag.CacheVolume("trivy"),
+			WarmDatabaseCache: true,
+		}),
 	}
 }
 
@@ -58,9 +63,18 @@ func (m *Build) Check(
 	}
 	test, err := m.UnitTests(ctx, source)
 	if err != nil {
-		return "", fmt.Errorf("Error is: %v", err)
+		return "", fmt.Errorf("error is: %v", err)
 	}
-	return "Lint result: " + lint + "\n" + "Test result: " + test, nil
+	binaryName, err := m.Source.Name(ctx)
+	if err != nil {
+		return "", err
+	}
+	scan := m.Trivy.Container(m.Container(source, 8080, binaryName))
+	trivyOutuput, err := scan.Output(ctx)
+	if err != nil {
+		return "", fmt.Errorf("error is: %v", err)
+	}
+	return "Lint result: " + lint + "\n" + "Test result: " + test + "\n" + "Scan result: " + trivyOutuput, nil
 }
 
 // Builds the source binary
@@ -90,10 +104,10 @@ func (m *Build) Container(
 	binaryName string,
 ) *dagger.Container {
 	binary := m.Binary(source, binaryName)
-	binaryStr := fmt.Sprintf("/bin/%s", "service")
+	binaryStr := fmt.Sprintf("/bin/%s", binaryName)
 
 	return dag.Container().
-		From("ubuntu:24.10").
+		From("ubuntu:24.04").
 		WithFile(binaryStr, binary).
 		WithEntrypoint([]string{binaryStr}).
 		WithExposedPort(port)
@@ -105,7 +119,7 @@ func (m *Build) CheckDirectory(
 	// Directory to run checks on
 	source *dagger.Directory,
 ) (string, error) {
-	// m.Source = source
+	m.Source = source
 	return m.Check(ctx, source)
 }
 
