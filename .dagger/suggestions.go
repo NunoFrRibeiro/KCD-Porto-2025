@@ -40,7 +40,7 @@ func parseDiff(diffText string) []CodeSuggestion {
 		}
 
 		if strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++") {
-			newCode = append(newCode, line[1:]) // Remove `+`
+			newCode = append(newCode, line[1:])
 			continue
 		}
 

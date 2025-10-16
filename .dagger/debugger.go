@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"dagger/kcd/internal/dagger"
 	"fmt"
 	"path/filepath"
 	"strings"
+
+	"dagger/kcd/internal/dagger"
 )
 
 var GH_REPO = "https://github.com/NunoFrRibeiro/kcd-porto-2025"
@@ -136,26 +137,44 @@ func (d *Kcd) DebugPR(
 			Line:       codeSuggestion.Line,
 			Suggestion: codeSuggestion.Suggestion,
 		}
-
 		correctedSuggestions = append(correctedSuggestions, updatedSuggestion)
 
-		markupSuggestion := "```suggestion\n" + strings.Join(
-			codeSuggestion.Suggestion,
-			"\n",
-		) + "\n```"
-		fmt.Printf("markup: %s\n", markupSuggestion)
-		err := githubIssue.WritePullRequestCodeComment(
-			ctx,
-			GH_REPO,
-			pr,
-			commit,
-			markupSuggestion,
-			fullPath,
-			"RIGHT",
-			codeSuggestion.Line,
-		)
-		if err != nil {
-			return err
+		if strings.HasSuffix(updatedSuggestion.File, ".md") {
+			markupSuggestion := strings.Join(
+				codeSuggestion.Suggestion,
+				"\n",
+			)
+			fmt.Printf("markup: %s\n", markupSuggestion)
+			err := githubIssue.WriteComment(
+				ctx,
+				GH_REPO,
+				pr,
+				markupSuggestion,
+			)
+			if err != nil {
+				return err
+			} else {
+				return nil
+			}
+		} else {
+			markupSuggestion := "```suggestion\n" + strings.Join(
+				codeSuggestion.Suggestion,
+				"\n",
+			) + "\n```"
+			fmt.Printf("markup: %s\n", markupSuggestion)
+			err := githubIssue.WritePullRequestCodeComment(
+				ctx,
+				GH_REPO,
+				pr,
+				commit,
+				markupSuggestion,
+				fullPath,
+				"RIGHT",
+				codeSuggestion.Line,
+			)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

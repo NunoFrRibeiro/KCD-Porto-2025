@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"dagger/kcd/internal/dagger"
 	"fmt"
+
+	"dagger/kcd/internal/dagger"
 )
 
 // Runs GolangCILint for all sources
@@ -52,7 +53,11 @@ func (m *Kcd) RunTrivy(
 		return "", nil
 	}
 
-	counterContainer := m.Build.Container(m.Source.Directory("CounterBackend"), 8081, "CounterBackend")
+	counterContainer := m.Build.Container(
+		m.Source.Directory("CounterBackend"),
+		8081,
+		"CounterBackend",
+	)
 	counterResult, err := m.Build.RunTrivy(ctx, counterContainer)
 	if err != nil {
 		return "", nil
@@ -96,11 +101,21 @@ func (m *Kcd) Check(
 	if err == nil {
 		if githubToken != nil {
 			debugPr := m.DebugPR(ctx, githubToken, commit, model, trivyResult)
-			return "", fmt.Errorf("failed to run trivy scan.\nrunning debugger %v", debugPr)
+			return fmt.Sprintf(
+				"lint result:\n%s\ntest result:\n%s\ntrivy scan result:\n%s\n",
+				lintResult,
+				testResult,
+				trivyResult,
+			), debugPr
 		}
 	} else {
 		return "", fmt.Errorf("error running trivy scan:\n%v", err)
 	}
 
-	return fmt.Sprintf("lint result:\n%s\ntest result:\n%s\ntrivy scan result:\n%s\n", lintResult, testResult, trivyResult), nil
+	return fmt.Sprintf(
+		"lint result:\n%s\ntest result:\n%s\ntrivy scan result:\n%s\n",
+		lintResult,
+		testResult,
+		trivyResult,
+	), nil
 }

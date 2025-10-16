@@ -51,7 +51,7 @@ func (m *Build) RunTrivy(
 ) (string, error) {
 	scan := m.Trivy.Container(container)
 	return scan.Output(ctx, dagger.TrivyScanOutputOpts{
-		Format: "json",
+		Format: "table",
 	})
 }
 
@@ -82,7 +82,7 @@ func (m *Build) Check(
 	}
 	scan := m.Trivy.Container(m.Container(source, 8080, binaryName))
 	trivyOutuput, err := scan.Output(ctx, dagger.TrivyScanOutputOpts{
-		Format: "json",
+		Format: "table",
 	})
 	if err != nil {
 		return "", nil
