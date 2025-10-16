@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/build/internal/dagger"
 	"fmt"
+	"strings"
 )
 
 type Build struct {
@@ -48,8 +49,10 @@ func (m *Build) RunTrivy(
 	ctx context.Context,
 	container *dagger.Container,
 ) (string, error) {
-	scan := dag.Trivy().Container(container)
-	return scan.Output(ctx)
+	scan := m.Trivy.Container(container)
+	return scan.Output(ctx, dagger.TrivyScanOutputOpts{
+		Format: "json",
+	})
 }
 
 // Formatter
@@ -78,11 +81,13 @@ func (m *Build) Check(
 		return "", err
 	}
 	scan := m.Trivy.Container(m.Container(source, 8080, binaryName))
-	trivyOutuput, err := scan.Output(ctx)
+	trivyOutuput, err := scan.Output(ctx, dagger.TrivyScanOutputOpts{
+		Format: "json",
+	})
 	if err != nil {
-		return "", fmt.Errorf("error is: %v", err)
+		return "", nil
 	}
-	return "Lint result:\n" + lint + "\n" + "Test result:\n" + test + "\n" + "Scan result:\n" + trivyOutuput, nil
+	return fmt.Sprintf("Lint result:\n%s\nTest result:\n%s\ntrivy scan result:%s\n", lint, test, trivyOutuput), fmt.Errorf("%s", trivyOutuput)
 }
 
 // Builds the source binary
@@ -147,6 +152,9 @@ func (m *Build) FormatFile(
 	// File path to format
 	path string,
 ) *dagger.Directory {
+	if strings.HasSuffix(path, ".md") {
+		return source
+	}
 	return dag.
 		Container().
 		From("golang:1.24").

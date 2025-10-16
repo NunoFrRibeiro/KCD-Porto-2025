@@ -8,19 +8,22 @@ import (
 	"strings"
 )
 
-var GH_REPO = "https://github.com/NunoFrRibeiro/devops-porto-nov"
+var GH_REPO = "https://github.com/NunoFrRibeiro/kcd-porto-2025"
 
 // Debug locallly
 func (d *Kcd) DebugLocal(
 	ctx context.Context,
 	// LLM model used to debug tests
-	// *optional
+	// +optional
 	// +default="gemini-2.0-flash"
 	model string,
+	// trivy scan result
+	// +optional
+	trivyScanResult string,
 ) (string, error) {
 	prompt := dag.CurrentModule().
 		Source().
-		File("prompts/fix_tests.md")
+		File("prompts/debugger.md")
 
 	// check if CounterBackend is broken
 	if _, counterErr := d.Build.CheckDirectory(ctx, d.Source.Directory("CounterBackend")); counterErr != nil {
@@ -64,7 +67,7 @@ func (d *Kcd) DebugLocal(
 			Diff(ctx)
 	}
 
-	return "", fmt.Errorf("Nothing broken was found")
+	return "", fmt.Errorf("nothing broken was found")
 }
 
 // Debug PR
@@ -75,9 +78,12 @@ func (d *Kcd) DebugPR(
 	// GitHub git commit
 	commit string,
 	// LLM model used to debug tests
-	// *optional
+	// +optional
 	// +default="gemini-2.0-flash"
 	model string,
+	// trivy scan result
+	// +optional
+	trivyScanResult string,
 ) error {
 	githubIssue := dag.GithubIssue(dagger.GithubIssueOpts{
 		Token: githubToken,
@@ -94,9 +100,17 @@ func (d *Kcd) DebugPR(
 		return err
 	}
 
-	suggestionDiff, err := d.DebugLocal(ctx, model)
-	if err != nil {
-		return err
+	suggestionDiff := ""
+	if trivyScanResult != "" {
+		suggestionDiff, err = d.DebugLocal(ctx, model, trivyScanResult)
+		if err != nil {
+			return err
+		}
+	} else {
+		suggestionDiff, err = d.DebugLocal(ctx, model, trivyScanResult)
+		if err != nil {
+			return err
+		}
 	}
 
 	if suggestionDiff == "" {

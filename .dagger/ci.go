@@ -77,7 +77,7 @@ func (m *Kcd) Check(
 	lintResult, err := m.Lint(ctx)
 	if err != nil {
 		if githubToken != nil {
-			debugPr := m.DebugPR(ctx, githubToken, commit, model)
+			debugPr := m.DebugPR(ctx, githubToken, commit, model, "")
 			return "", fmt.Errorf("failed to lint.\nrunning debugger for %v %v", err, debugPr)
 		}
 		return "", err
@@ -86,19 +86,20 @@ func (m *Kcd) Check(
 	testResult, err := m.Test(ctx)
 	if err != nil {
 		if githubToken != nil {
-			debugPr := m.DebugPR(ctx, githubToken, commit, model)
+			debugPr := m.DebugPR(ctx, githubToken, commit, model, "")
 			return "", fmt.Errorf("failed to test.\nrunning debugger for %v %v", err, debugPr)
 		}
 		return "", err
 	}
 
 	trivyResult, err := m.RunTrivy(ctx)
-	if err != nil {
+	if err == nil {
 		if githubToken != nil {
-			debugPr := m.DebugPR(ctx, githubToken, commit, model)
-			return "", fmt.Errorf("failed to run trivy scan.\nrunning debugger for %v %v", err, debugPr)
+			debugPr := m.DebugPR(ctx, githubToken, commit, model, trivyResult)
+			return "", fmt.Errorf("failed to run trivy scan.\nrunning debugger %v", debugPr)
 		}
-		return "", err
+	} else {
+		return "", fmt.Errorf("error running trivy scan:\n%v", err)
 	}
 
 	return fmt.Sprintf("lint result:\n%s\ntest result:\n%s\ntrivy scan result:\n%s\n", lintResult, testResult, trivyResult), nil
