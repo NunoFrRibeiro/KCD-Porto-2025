@@ -47,7 +47,12 @@ func (m *Kcd) Test(
 func (m *Kcd) RunTrivy(
 	ctx context.Context,
 ) (string, error) {
-	adderContainer := m.Build.Container(m.Source.Directory("AdderBackend"), 8080, "AdderBackend")
+	adderContainer := m.Build.Container(
+		m.Source.Directory("AdderBackend"),
+		8080,
+		"AdderBackend",
+		
+	)
 	adderResult, err := m.Build.RunTrivy(ctx, adderContainer)
 	if err != nil {
 		return "", nil
@@ -63,7 +68,8 @@ func (m *Kcd) RunTrivy(
 		return "", nil
 	}
 
-	result := adderResult + "\n" + counterResult
+	result := fmt.Sprintf("AdderBackend trivy scan result:\n%s\nCounterBackend trivy scan result:\n%s\n", adderResult, counterResult)
+	
 	return result, nil
 }
 
@@ -82,7 +88,7 @@ func (m *Kcd) Check(
 	lintResult, err := m.Lint(ctx)
 	if err != nil {
 		if githubToken != nil {
-			debugPr := m.DebugPR(ctx, githubToken, commit, model, "")
+			debugPr := m.DebugPR(ctx, githubToken, commit, model)
 			return "", fmt.Errorf("failed to lint.\nrunning debugger for %v %v", err, debugPr)
 		}
 		return "", err
@@ -91,7 +97,7 @@ func (m *Kcd) Check(
 	testResult, err := m.Test(ctx)
 	if err != nil {
 		if githubToken != nil {
-			debugPr := m.DebugPR(ctx, githubToken, commit, model, "")
+			debugPr := m.DebugPR(ctx, githubToken, commit, model)
 			return "", fmt.Errorf("failed to test.\nrunning debugger for %v %v", err, debugPr)
 		}
 		return "", err
@@ -100,7 +106,7 @@ func (m *Kcd) Check(
 	trivyResult, err := m.RunTrivy(ctx)
 	if err == nil {
 		if githubToken != nil {
-			debugPr := m.DebugPR(ctx, githubToken, commit, model, trivyResult)
+			debugPr := m.DebugPR(ctx, githubToken, commit, model)
 			return fmt.Sprintf(
 				"lint result:\n%s\ntest result:\n%s\ntrivy scan result:\n%s\n",
 				lintResult,

@@ -22,6 +22,26 @@ Tests are failing
 - Do not try to correct these vulnerabilities
 - Do not run the checks
 
+#### If there are no vulnerabilities
+
+- create a file called `no_vulnerabilities.md` at the repo root
+- Do not run the checks
+- finish the task
+
+#### vulnerabilities report template
+
+Follow the template:
+- title: ## Vulnerability Summary
+- subtitle: where the vulnerabilities were found
+- summary of the vulnerabilities
+- CVE identification (with link to the CVE page)
+- name of the package/module affected
+- severity
+- summary
+
+E.g.:
+**CVE-2016-2781(coreutils) - Severity: LOW : Non-privileged session can escape to the parent session in chroot ()**
+
 ### If you are correcting failing tests or lint errors
 
 - There is no main.go file

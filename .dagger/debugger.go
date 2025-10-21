@@ -18,9 +18,6 @@ func (d *Kcd) DebugLocal(
 	// +optional
 	// +default="gemini-2.0-flash"
 	model string,
-	// trivy scan result
-	// +optional
-	trivyScanResult string,
 ) (string, error) {
 	prompt := dag.CurrentModule().
 		Source().
@@ -82,9 +79,6 @@ func (d *Kcd) DebugPR(
 	// +optional
 	// +default="gemini-2.0-flash"
 	model string,
-	// trivy scan result
-	// +optional
-	trivyScanResult string,
 ) error {
 	githubIssue := dag.GithubIssue(dagger.GithubIssueOpts{
 		Token: githubToken,
@@ -101,17 +95,9 @@ func (d *Kcd) DebugPR(
 		return err
 	}
 
-	suggestionDiff := ""
-	if trivyScanResult != "" {
-		suggestionDiff, err = d.DebugLocal(ctx, model, trivyScanResult)
-		if err != nil {
-			return err
-		}
-	} else {
-		suggestionDiff, err = d.DebugLocal(ctx, model, trivyScanResult)
-		if err != nil {
-			return err
-		}
+	suggestionDiff, err := d.DebugLocal(ctx, model)
+	if err != nil {
+		return err
 	}
 
 	if suggestionDiff == "" {
