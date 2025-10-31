@@ -16,7 +16,7 @@ func (d *Kcd) DebugLocal(
 	ctx context.Context,
 	// LLM model used to debug tests
 	// +optional
-	// +default="gemini-2.0-flash"
+	// +default="claude-sonnet-4-5"
 	model string,
 ) (string, error) {
 	prompt := dag.CurrentModule().
@@ -77,7 +77,7 @@ func (d *Kcd) DebugPR(
 	commit string,
 	// LLM model used to debug tests
 	// +optional
-	// +default="gemini-2.0-flash"
+	// +default="claude-sonnet-4-5"
 	model string,
 ) error {
 	githubIssue := dag.GithubIssue(dagger.GithubIssueOpts{
