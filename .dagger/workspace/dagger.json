@@ -1,7 +1,8 @@
 {
   "name": "workspace",
-  "engineVersion": "v0.18.18",
+  "engineVersion": "v0.19.4",
   "sdk": {
     "source": "go"
-  }
+  },
+  "disableDefaultFunctionCaching": true
 }

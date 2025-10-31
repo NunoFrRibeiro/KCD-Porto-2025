@@ -9,17 +9,19 @@ import (
 	"dagger/kcd/internal/dagger"
 )
 
+var GH_REPO = "https://github.com/NunoFrRibeiro/kcd-porto-2025"
+
 // Debug locallly
 func (d *Kcd) DebugLocal(
 	ctx context.Context,
 	// LLM model used to debug tests
-	// *optional
-	// +default="gemini-2.0-flash"
+	// +optional
+	// +default="claude-sonnet-4-5"
 	model string,
 ) (string, error) {
 	prompt := dag.CurrentModule().
 		Source().
-		File("prompts/fix_tests.md")
+		File("prompts/debugger.md")
 
 	// check if CounterBackend is broken
 	if _, counterErr := d.Build.CheckDirectory(ctx, d.Source.Directory("CounterBackend")); counterErr != nil {
@@ -63,7 +65,7 @@ func (d *Kcd) DebugLocal(
 			Diff(ctx)
 	}
 
-	return "", fmt.Errorf("Nothing broken was found")
+	return "", fmt.Errorf("nothing broken was found")
 }
 
 // Debug PR
@@ -74,8 +76,8 @@ func (d *Kcd) DebugPR(
 	// GitHub git commit
 	commit string,
 	// LLM model used to debug tests
-	// *optional
-	// +default="gemini-2.0-flash"
+	// +optional
+	// +default="claude-sonnet-4-5"
 	model string,
 ) error {
 	githubIssue := dag.GithubIssue(dagger.GithubIssueOpts{
@@ -121,26 +123,44 @@ func (d *Kcd) DebugPR(
 			Line:       codeSuggestion.Line,
 			Suggestion: codeSuggestion.Suggestion,
 		}
-
 		correctedSuggestions = append(correctedSuggestions, updatedSuggestion)
 
-		markupSuggestion := "```suggestion\n" + strings.Join(
-			codeSuggestion.Suggestion,
-			"\n",
-		) + "\n```"
-		fmt.Printf("markup: %s\n", markupSuggestion)
-		err := githubIssue.WritePullRequestCodeComment(
-			ctx,
-			GH_REPO,
-			pr,
-			commit,
-			markupSuggestion,
-			fullPath,
-			"RIGHT",
-			codeSuggestion.Line,
-		)
-		if err != nil {
-			return err
+		if strings.HasSuffix(updatedSuggestion.File, ".md") {
+			markupSuggestion := strings.Join(
+				codeSuggestion.Suggestion,
+				"\n",
+			)
+			fmt.Printf("markup: %s\n", markupSuggestion)
+			err := githubIssue.WriteComment(
+				ctx,
+				GH_REPO,
+				pr,
+				markupSuggestion,
+			)
+			if err != nil {
+				return err
+			} else {
+				return nil
+			}
+		} else {
+			markupSuggestion := "```suggestion\n" + strings.Join(
+				codeSuggestion.Suggestion,
+				"\n",
+			) + "\n```"
+			fmt.Printf("markup: %s\n", markupSuggestion)
+			err := githubIssue.WritePullRequestCodeComment(
+				ctx,
+				GH_REPO,
+				pr,
+				commit,
+				markupSuggestion,
+				fullPath,
+				"RIGHT",
+				codeSuggestion.Line,
+			)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

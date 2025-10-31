@@ -40,7 +40,7 @@ func parseDiff(diffText string) []CodeSuggestion {
 		}
 
 		if strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++") {
-			newCode = append(newCode, line[1:]) // Remove `+`
+			newCode = append(newCode, line[1:])
 			continue
 		}
 
@@ -81,7 +81,7 @@ func atoi(s string) int {
 
 func determineProjectBasePath(filenameFromDiff string) string {
 	if strings.Contains(strings.ToLower(filenameFromDiff), "counter") {
-		return "CounterBackend" // No trailing slash needed here for filepath.Join
+		return "CounterBackend"
 	}
 	if strings.Contains(strings.ToLower(filenameFromDiff), "adder") {
 		return "AdderBackend"

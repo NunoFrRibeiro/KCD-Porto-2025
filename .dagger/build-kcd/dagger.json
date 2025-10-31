@@ -1,6 +1,6 @@
 {
   "name": "build",
-  "engineVersion": "v0.18.18",
+  "engineVersion": "v0.19.4",
   "sdk": {
     "source": "go"
   },
@@ -9,6 +9,12 @@
       "name": "golang",
       "source": "github.com/kpenfound/dagger-modules/golang@f7964245d0146dd3810f247c6c09eb33518d4654",
       "pin": "f7964245d0146dd3810f247c6c09eb33518d4654"
+    },
+    {
+      "name": "trivy",
+      "source": "github.com/sagikazarmark/daggerverse/trivy@trivy/v0.6.0",
+      "pin": "126b5fbbdad70dbf2a8689600baec2eb78c05ef4"
     }
-  ]
+  ],
+  "disableDefaultFunctionCaching": true
 }

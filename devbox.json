@@ -1,18 +1,15 @@
 {
-  "$schema":  "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
   "packages": [
     "go@1.24.5",
-    "github:dagger/nix/e644941e40cb6885148bf308e4e93b93db552fb7#packages.x86_64-linux.dagger"
+    "github:dagger/nix/7b26bb9ab5efa77990bc792fa43d5a89f8359da8#packages.x86_64-linux.dagger",
+    "gh@2.81.0"
   ],
   "shell": {
     "init_hook": [
       "alias cat='bat --theme 1337'",
       "eval \"$(dagger completion bash)\""
     ],
-    "scripts": {
-      "test": [
-        "echo \"Error: no test specified\" && exit 1"
-      ]
-    }
+    "scripts": {}
   }
 }

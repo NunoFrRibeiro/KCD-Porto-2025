@@ -2,13 +2,15 @@ package main
 
 import (
 	"context"
-	"fmt"
-
 	"dagger/build/internal/dagger"
+	"fmt"
+	"strings"
 )
 
 type Build struct {
 	Source *dagger.Directory
+	// +private
+	Trivy *dagger.Trivy
 }
 
 func New(
@@ -16,6 +18,10 @@ func New(
 ) *Build {
 	return &Build{
 		Source: source,
+		Trivy: dag.Trivy(dagger.TrivyOpts{
+			Cache:             dag.CacheVolume("trivy"),
+			WarmDatabaseCache: true,
+		}),
 	}
 }
 
@@ -39,6 +45,16 @@ func (m *Build) Lint(
 		GolangciLint(ctx)
 }
 
+func (m *Build) RunTrivy(
+	ctx context.Context,
+	container *dagger.Container,
+) (string, error) {
+	scan := m.Trivy.Container(container)
+	return scan.Output(ctx, dagger.TrivyScanOutputOpts{
+		Format: "table",
+	})
+}
+
 // Formatter
 func (m *Build) Format() *dagger.Directory {
 	return dag.Golang().
@@ -58,9 +74,20 @@ func (m *Build) Check(
 	}
 	test, err := m.UnitTests(ctx, source)
 	if err != nil {
-		return "", fmt.Errorf("Error is: %v", err)
+		return "", fmt.Errorf("error is: %v", err)
 	}
-	return "Lint result: " + lint + "\n" + "Test result: " + test, nil
+	binaryName, err := m.Source.Name(ctx)
+	if err != nil {
+		return "", err
+	}
+	scan := m.Trivy.Container(m.Container(source, 8080, binaryName))
+	trivyOutuput, err := scan.Output(ctx, dagger.TrivyScanOutputOpts{
+		Format: "table",
+	})
+	if err != nil {
+		return "", nil
+	}
+	return fmt.Sprintf("Lint result:\n%s\nTest result:\n%s\ntrivy scan result:%s\n", lint, test, trivyOutuput), fmt.Errorf("%s", trivyOutuput)
 }
 
 // Builds the source binary
@@ -90,10 +117,10 @@ func (m *Build) Container(
 	binaryName string,
 ) *dagger.Container {
 	binary := m.Binary(source, binaryName)
-	binaryStr := fmt.Sprintf("/bin/%s", "service")
+	binaryStr := fmt.Sprintf("/bin/%s", binaryName)
 
 	return dag.Container().
-		From("ubuntu:24.10").
+		From("ubuntu:24.04").
 		WithFile(binaryStr, binary).
 		WithEntrypoint([]string{binaryStr}).
 		WithExposedPort(port)
@@ -105,7 +132,7 @@ func (m *Build) CheckDirectory(
 	// Directory to run checks on
 	source *dagger.Directory,
 ) (string, error) {
-	// m.Source = source
+	m.Source = source
 	return m.Check(ctx, source)
 }
 
@@ -125,6 +152,9 @@ func (m *Build) FormatFile(
 	// File path to format
 	path string,
 ) *dagger.Directory {
+	if strings.HasSuffix(path, ".md") {
+		return source
+	}
 	return dag.
 		Container().
 		From("golang:1.24").

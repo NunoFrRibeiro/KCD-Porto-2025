@@ -33,5 +33,6 @@ func New(
 
 	return &Kcd{
 		Source: source,
+		Build:  dag.Build(source),
 	}, nil
 }
